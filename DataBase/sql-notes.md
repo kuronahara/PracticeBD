@@ -81,3 +81,81 @@ DDL из `init.sql` создаёт 4 таблицы с PK и FK, включая 
 `EmployeeProjects` (связь многие-ко-многим). Проверки через
 INFORMATION_SCHEMA и `sys.foreign_keys` подтверждают: таблицы существуют,
 связи корректны, типы соответствуют заданию.
+
+
+
+
+## Task 02 — INSERT: заполнение данными
+
+### SQL
+
+```sql
+-- Вставки из init.sql (один INSERT на таблицу, несколько VALUES).
+
+INSERT INTO Departments (DepartmentName) VALUES
+    (N'Разработка'),
+    (N'Аналитика'),
+    (N'Тестирование'),
+    (N'Менеджмент');
+
+INSERT INTO Employees (EmployeeName, Salary, HireDate, DepartmentId, ManagerId) VALUES
+    (N'Анна Иванова',    65000, '2020-03-15', 1, NULL),
+    (N'Пётр Сидоров',    72000, '2019-07-01', 1, NULL),
+    (N'Мария Кузнецова', 55000, '2021-11-20', 1, NULL),
+    (N'Иван Петров',     48000, '2023-02-10', 1, NULL),
+    (N'Ольга Смирнова',  61000, '2020-09-05', 2, NULL),
+    (N'Дмитрий Орлов',   58000, '2022-04-18', 2, NULL),
+    (N'Елена Волкова',   52000, '2023-06-01', 2, NULL),
+    (N'Сергей Морозов',  45000, '2021-12-12', 3, NULL),
+    (N'Наталья Соколова',43000, '2024-01-15', 3, NULL),
+    (N'Алексей Лебедев', 90000, '2018-05-25', 4, NULL);
+
+-- ManagerId проставляется после вставки (self-FK):
+UPDATE Employees SET ManagerId = 1  WHERE EmployeeId = 4;
+UPDATE Employees SET ManagerId = 2  WHERE EmployeeId = 3;
+UPDATE Employees SET ManagerId = 5  WHERE EmployeeId = 6;
+UPDATE Employees SET ManagerId = 10 WHERE EmployeeId = 9;
+
+INSERT INTO Projects (ProjectName, StartDate) VALUES
+    (N'CRM System',      '2023-01-10'),
+    (N'Mobile App',      '2023-05-01'),
+    (N'Data Warehouse',  '2022-11-20'),
+    (N'AI Assistant',    '2024-02-01'),
+    (N'Legacy Refactor', '2021-06-15');
+
+INSERT INTO EmployeeProjects (EmployeeId, ProjectId, Hours) VALUES
+    (1, 1, 120), (1, 3, 80),
+    (2, 1, 150), (2, 4, 60),
+    (3, 2, 100), (4, 2, 90),
+    (4, 5, 40),  (5, 3, 110),
+    (6, 3, 70),  (6, 4, 50),
+    (7, 2, 95),  (8, 5, 130),
+    (10, 4, 200),(10, 1, 30);
+
+-- Проверка количества строк:
+SELECT 'Departments'      AS Tbl, COUNT(*) AS Cnt FROM Departments
+UNION ALL SELECT 'Employees',        COUNT(*) FROM Employees
+UNION ALL SELECT 'Projects',         COUNT(*) FROM Projects
+UNION ALL SELECT 'EmployeeProjects', COUNT(*) FROM EmployeeProjects;
+```
+
+### Результат
+
+| Tbl              | Cnt |
+|------------------|-----|
+| Departments      | 4   |
+| Employees        | 10  |
+| Projects         | 5   |
+| EmployeeProjects | 14  |
+
+Все таблицы заполнены в рамках требований (3–4 / 8–10 / 4–5 / ≥10).
+Вставки выполнены одним `INSERT … VALUES (…), (…), …;` на каждую таблицу.
+
+### Вывод
+
+Требование «один INSERT с несколькими VALUES» выполнено во всех четырёх
+таблицах. `ManagerId` проставлен отдельными UPDATE после вставки — иначе
+self-FK на `Employees` не дал бы вставить строку, ссылающуюся на ещё не
+существующего сотрудника. Идентификаторы (`EmployeeId`, `ProjectId`)
+не задаются явно — используются `IDENTITY(1,1)`, поэтому назначения в
+`EmployeeProjects` ссылаются на Id 1..10 / 1..5 в порядке вставки.
