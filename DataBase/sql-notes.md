@@ -159,3 +159,71 @@ self-FK на `Employees` не дал бы вставить строку, ссы�
 существующего сотрудника. Идентификаторы (`EmployeeId`, `ProjectId`)
 не задаются явно — используются `IDENTITY(1,1)`, поэтому назначения в
 `EmployeeProjects` ссылаются на Id 1..10 / 1..5 в порядке вставки.
+
+
+
+
+## Task 03 — SELECT + WHERE: базовые выборки
+
+### SQL
+
+```sql
+USE PracticeDB;
+
+-- 1) Зарплата > 50000
+SELECT EmployeeId, EmployeeName, Salary
+FROM Employees
+WHERE Salary > 50000
+ORDER BY Salary DESC;
+
+-- 2) Нанятые в 2023
+SELECT EmployeeId, EmployeeName, HireDate
+FROM Employees
+WHERE YEAR(HireDate) = 2023
+ORDER BY HireDate;
+
+-- 3) Имя начинается на «А»
+SELECT EmployeeId, EmployeeName
+FROM Employees
+WHERE EmployeeName LIKE N'А%'
+ORDER BY EmployeeName;
+
+-- 4) Отдел 2
+SELECT EmployeeId, EmployeeName, DepartmentId
+FROM Employees
+WHERE DepartmentId = 2
+ORDER BY EmployeeName;
+
+-- 5) Зарплата 40000–60000
+SELECT EmployeeId, EmployeeName, Salary
+FROM Employees
+WHERE Salary BETWEEN 40000 AND 60000
+ORDER BY Salary;
+```
+
+### Результат
+
+1) > 50000 — 7 строк (Лебедев 90000, Сидоров 72000, Иванова 65000,
+   Смирнова 61000, Орлов 58000, Кузнецова 55000, Волкова 52000).
+
+2) 2023 год — 2 строки: Иван Петров (2023-02-10), Елена Волкова (2023-06-01).
+
+3) LIKE N'А%' — 2 строки: Анна Иванова, Алексей Лебедев.
+
+4) DepartmentId = 2 — 3 строки: Ольга Смирнова, Дмитрий Орлов, Елена Волкова.
+
+5) BETWEEN 40000 AND 60000 — 6 строк: Соколова 43000, Морозов 45000,
+   Петров 48000, Волкова 52000, Кузнецова 55000, Орлов 58000.
+
+Все пять запросов вернули непустой результат, условия корректны.
+
+### Вывод
+
+- `Salary > 50000` — строгое неравенство (граница не включается).
+- `YEAR(HireDate) = 2023` работает, но не sargable (не использует индекс
+  на HireDate); для больших таблиц лучше диапазон
+  `HireDate >= '2023-01-01' AND HireDate < '2024-01-01'`.
+- `LIKE N'А%'` — префикс `N` обязателен для NVARCHAR, иначе кириллица
+  сравнивается некорректно при не-Unicode collation.
+- `BETWEEN 40000 AND 60000` включает обе границы (>= и <=).
+- `DepartmentId = 2` — простой equality по FK-колонке.
