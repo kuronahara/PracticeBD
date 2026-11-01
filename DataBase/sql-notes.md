@@ -227,3 +227,60 @@ ORDER BY Salary;
   сравнивается некорректно при не-Unicode collation.
 - `BETWEEN 40000 AND 60000` включает обе границы (>= и <=).
 - `DepartmentId = 2` — простой equality по FK-колонке.
+
+
+
+
+
+
+## Task 04 — ORDER BY + TOP: сортировка и лимит
+
+### SQL
+
+```sql
+USE PracticeDB;
+
+-- 1) Топ-3 по зарплате (убывание)
+SELECT TOP (3) EmployeeId, EmployeeName, Salary
+FROM Employees
+ORDER BY Salary DESC;
+
+-- 2) Топ-5 самых давних по HireDate (возрастание)
+SELECT TOP (5) EmployeeId, EmployeeName, HireDate
+FROM Employees
+ORDER BY HireDate ASC;
+
+-- 3) По отделу (возр.), затем по зарплате (убыв.)
+SELECT EmployeeId, EmployeeName, DepartmentId, Salary
+FROM Employees
+ORDER BY DepartmentId ASC, Salary DESC;
+```
+
+### Результат
+
+1) TOP 3 по Salary DESC:
+   Лебедев 90000, Сидоров 72000, Иванова 65000.
+
+2) TOP 5 по HireDate ASC (самые давние):
+   Лебедев 2018-05-25, Сидоров 2019-07-01, Иванова 2020-03-15,
+   Смирнова 2020-09-05, Кузнецова 2021-11-20.
+
+3) ORDER BY DepartmentId ASC, Salary DESC — 10 строк:
+   отдел 1: Сидоров 72000, Иванова 65000, Кузнецова 55000, Петров 48000;
+   отдел 2: Смирнова 61000, Орлов 58000, Волкова 52000;
+   отдел 3: Морозов 45000, Соколова 43000;
+   отдел 4: Лебедев 90000.
+
+Порядок строк соответствует заданным правилам.
+
+### Вывод
+
+- TOP без ORDER BY недетерминирован — SQL Server вернёт «любые N»
+  строк. Для топа по зарплате обязателен `ORDER BY Salary DESC`.
+- «Самые давние» = минимальная HireDate → `ORDER BY HireDate ASC`.
+- В многоуровневой сортировке первый ключ доминирует: Лебедев (90000)
+  стоит последним, т.к. его отдел (4) последний по DepartmentId.
+- При равных значениях ключей сортировка недетерминирована; для
+  устойчивости добавляют уникальный ключ (EmployeeId).
+- `TOP (N)` — синтаксис с скобками; альтернатива — `OFFSET 0 ROWS
+  FETCH NEXT N ROWS ONLY` (SQL Server 2012+).
