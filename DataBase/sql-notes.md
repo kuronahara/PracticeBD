@@ -498,3 +498,43 @@ WHERE d.DepartmentId IS NULL;
 - INNER JOIN возвращает только совпавшие пары; строки без пары
   отбрасываются с обеих сторон. У нас FK гарантирует, что сирот нет,
   поэтому вернулись все 10 сотрудников.
+
+
+
+
+
+
+
+    ## Task 09 — LEFT JOIN: сотрудники без проектов
+
+### SQL
+
+```sql
+USE PracticeDB;
+
+SELECT
+    e.EmployeeId,
+    e.EmployeeName
+FROM Employees e
+LEFT JOIN EmployeeProjects ep ON ep.EmployeeId = e.EmployeeId
+WHERE ep.EmployeeId IS NULL
+ORDER BY e.EmployeeId;
+```
+
+### Результат
+
+| EmployeeId | EmployeeName |
+|------------|--------------|
+| 9 | Наталья Соколова |
+
+Из 10 сотрудников 9 назначены хотя бы на один проект; единственный
+без назначений — Наталья Соколова (Id 9). Проверка: 10 − 9 = 1.
+
+### Вывод
+
+- Условие `IS NULL` должно быть в WHERE, не в ON. Если положить его
+  в ON, LEFT JOIN вырождается и возвращает всех 10 сотрудников.
+- `= NULL` не работает (трёхзначная логика) — только `IS NULL`.
+- Альтернативы: NOT EXISTS (часто эффективнее) и NOT IN (осторожно:
+  при NULL в подзапросе вернёт пусто). Все три дают тот же результат.
+
