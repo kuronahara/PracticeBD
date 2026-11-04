@@ -593,3 +593,57 @@ EmployeeProjects (14), значит INNER JOIN не отбросил ни одн
   потерь нет.
 - Алиасы обязательны: DepartmentId, EmployeeId, ProjectId встречаются
   в двух таблицах каждая.
+
+
+
+
+
+
+   ## Task 11 — Self-join: иерархия руководителей
+
+### SQL
+
+```sql
+USE PracticeDB;
+
+SELECT
+    e.EmployeeName,
+    m.EmployeeName AS ManagerName
+FROM Employees e
+LEFT JOIN Employees m ON m.EmployeeId = e.ManagerId
+ORDER BY e.EmployeeId;
+```
+
+### Результат
+
+10 строк — по одной на каждого сотрудника:
+
+| EmployeeName | ManagerName |
+|--------------|-------------|
+| Анна Иванова | NULL |
+| Пётр Сидоров | NULL |
+| Мария Кузнецова | Пётр Сидоров |
+| Иван Петров | Анна Иванова |
+| Ольга Смирнова | NULL |
+| Дмитрий Орлов | Ольга Смирнова |
+| Елена Волкова | NULL |
+| Сергей Морозов | NULL |
+| Наталья Соколова | Алексей Лебедев |
+| Алексей Лебедев | NULL |
+
+У 4 сотрудников с ManagerId виден руководитель, у 6 (ManagerId IS NULL) —
+ManagerName = NULL. COUNT = 10 = COUNT(*) из Employees.
+
+### Вывод
+
+- Self-join: Employees соединяется сама с собой через алиасы e (сотрудник)
+  и m (менеджер).
+- LEFT JOIN обязателен: при INNER JOIN строки с ManagerId IS NULL не
+  нашли бы пару и выпали — вернулось бы 4 строки вместо 10, а требование
+  «без руководителя → NULL» нарушилось бы.
+- Алиасы e/m обязательны, иначе SQL Server не различит два экземпляра
+  одной таблицы.
+- m.EmployeeName AS ManagerName — переименование, иначе две колонки с
+  одним именем.
+- Self-join даёт только один уровень иерархии; для многоуровневой нужен
+  рекурсивный CTE (уровень 3).
