@@ -805,3 +805,78 @@ SELECT
 Sanity check: WithProjects = 9, WithoutProjects = 1, Total = 10.
 9 + 1 = 10 — полное разбиение, совпадает с заданиями 8 (9 человек
 с проектами) и 9 (1 без проектов).
+
+
+
+
+
+
+
+
+
+## Task 15 — UNION / UNION ALL
+
+### SQL
+
+```sql
+USE PracticeDB;
+
+-- A: Salary > 60000 (4 строки)
+-- B: HireDate < '2022-01-01' (6 строк)
+
+-- 1) UNION ALL — с дублями
+SELECT EmployeeId, EmployeeName, Salary, HireDate
+FROM Employees WHERE Salary > 60000
+UNION ALL
+SELECT EmployeeId, EmployeeName, Salary, HireDate
+FROM Employees WHERE HireDate < '2022-01-01'
+ORDER BY EmployeeId;
+
+-- 2) UNION — уникальные строки
+SELECT EmployeeId, EmployeeName, Salary, HireDate
+FROM Employees WHERE Salary > 60000
+UNION
+SELECT EmployeeId, EmployeeName, Salary, HireDate
+FROM Employees WHERE HireDate < '2022-01-01'
+ORDER BY EmployeeId;
+
+-- 3) Сравнение количества строк
+SELECT 'UNION ALL' AS Variant, COUNT(*) AS Cnt FROM (
+    SELECT EmployeeId FROM Employees WHERE Salary > 60000
+    UNION ALL
+    SELECT EmployeeId FROM Employees WHERE HireDate < '2022-01-01'
+) t
+UNION ALL
+SELECT 'UNION', COUNT(*) FROM (
+    SELECT EmployeeId FROM Employees WHERE Salary > 60000
+    UNION
+    SELECT EmployeeId FROM Employees WHERE HireDate < '2022-01-01'
+) t;
+```
+
+### Результат
+
+A (Salary > 60000) = 4 строки: Иванова, Сидоров, Смирнова, Лебедев.
+B (HireDate < 2022-01-01) = 6 строк: Иванова, Сидоров, Кузнецова,
+Смирнова, Морозов, Лебедев.
+
+Пересечение A ∩ B = 4 (Иванова, Сидоров, Смирнова, Лебедев) —
+попадают в оба запроса.
+
+| Variant | Cnt |
+|---------|-----|
+| UNION ALL | 10 |
+| UNION | 6 |
+
+Разница 10 − 6 = 4 = размер пересечения. UNION убрал дубли,
+UNION ALL оставил. Требование «разница видна по количеству строк»
+выполнено.
+
+### Вывод
+
+- UNION ALL оставляет все строки (4 + 6 = 10); UNION удаляет дубли
+  (10 − 4 = 6). UNION = UNION ALL + DISTINCT.
+- ORDER BY при UNION — только в конце, после последнего SELECT;
+  имена колонок для сортировки берутся из первого SELECT.
+- UNION требует одинакового числа колонок и совместимых типов;
+  имена колонок результата — из первого SELECT.
