@@ -1178,3 +1178,70 @@ UNION ALL SELECT 'Departments',      COUNT(*) FROM Departments;
 
 Критерий выполнен: VIEW возвращал данные как обычный запрос, DROP
 выполнился без ошибок.
+
+
+
+
+
+## Task 20 — Индексы: создание и анализ
+
+### SQL
+
+
+```sql
+USE PracticeDB;
+
+-- === ДО индексов ===
+SET STATISTICS IO ON;
+
+SELECT EmployeeId, EmployeeName, DepartmentId, Salary
+FROM Employees
+WHERE DepartmentId = 1 AND Salary > 50000;
+
+SET STATISTICS IO OFF;
+
+-- === Создание индексов ===
+CREATE INDEX IX_Employees_DepartmentId ON Employees(DepartmentId);
+CREATE INDEX IX_Employees_Salary        ON Employees(Salary);
+
+-- === ПОСЛЕ индексов ===
+SET STATISTICS IO ON;
+
+SELECT EmployeeId, EmployeeName, DepartmentId, Salary
+FROM Employees
+WHERE DepartmentId = 1 AND Salary > 50000;
+
+SET STATISTICS IO OFF;
+
+-- Проверка: индексы существуют
+SELECT name, type_desc
+FROM sys.indexes
+WHERE object_id = OBJECT_ID('Employees') AND name LIKE 'IX_%';
+
+-- (опционально) удалить
+-- DROP INDEX IX_Employees_DepartmentId ON Employees;
+-- DROP INDEX IX_Employees_Salary ON Employees;
+```
+
+### Результат
+
+**Результат запроса (до и после — одинаковый):**
+
+| EmployeeId | EmployeeName | DepartmentId | Salary |
+|------------|--------------|--------------|--------|
+| 1 | Анна Иванова | 1 | 65000.00 |
+| 2 | Пётр Сидоров | 1 | 72000.00 |
+
+**SET STATISTICS IO (Messages):**
+
+| | logical reads | План |
+|---|---|---|
+| До индексов | 1 | Table Scan / Clustered Index Scan |
+| После индексов | 1 (или 2) | Table Scan / Clustered Index Scan (оптимизатор не выбрал индекс) |
+
+**sys.indexes:**
+
+| name | type_desc |
+|------|-----------|
+| IX_Employees_DepartmentId | NONCLUSTERED |
+| IX_Employees_Salary | NONCLUSTERED |
