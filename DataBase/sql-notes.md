@@ -331,3 +331,48 @@ FROM Employees;
   SELECT с общими агрегатами — `WHERE` отфильтрует строки до агрегации.
   Правильно — условный агрегат `COUNT(CASE WHEN Salary > 50000 THEN 1 END)`.
 - На пустой таблице COUNT вернёт 0, а SUM/AVG/MIN/MAX — NULL.
+
+
+
+
+
+
+## Task 06 — GROUP BY: статистика по отделам
+
+### SQL
+
+```sql
+USE PracticeDB;
+
+SELECT
+    DepartmentId,
+    COUNT(*)              AS EmployeeCount,
+    ROUND(AVG(Salary), 2) AS AvgSalary,
+    SUM(Salary)           AS TotalSalary
+FROM Employees
+GROUP BY DepartmentId
+ORDER BY AvgSalary DESC;
+```
+
+### Результат
+
+| DepartmentId | EmployeeCount | AvgSalary | TotalSalary |
+|--------------|---------------|-----------|-------------|
+| 4 | 1 | 90000.00 | 90000.00 |
+| 1 | 4 | 60000.00 | 240000.00 |
+| 2 | 3 | 57000.00 | 171000.00 |
+| 3 | 2 | 44000.00 | 88000.00 |
+
+Проверка: сумма EmployeeCount = 10, сумма TotalSalary = 589000 —
+совпадает с общими агрегатами из Task 05. На каждый отдел ровно одна
+строка, сортировка по средней зарплате по убыванию корректна.
+
+### Вывод
+
+- `GROUP BY DepartmentId` даёт одну строку на отдел; в SELECT можно
+  выводить только сгруппированные колонки и агрегаты.
+- `ORDER BY AvgSalary` — сортировка по алиасу работает, т.к. ORDER BY
+  вычисляется после SELECT (в GROUP BY/WHERE алиасы недоступны).
+- Чтобы вывести DepartmentName, нужно либо добавить его в GROUP BY,
+  либо джойнить Departments (см. доп. запрос).
+- Сумма агрегатов по группам = общий агрегат — хороший sanity check.
