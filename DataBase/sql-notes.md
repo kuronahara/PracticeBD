@@ -376,3 +376,74 @@ ORDER BY AvgSalary DESC;
 - Чтобы вывести DepartmentName, нужно либо добавить его в GROUP BY,
   либо джойнить Departments (см. доп. запрос).
 - Сумма агрегатов по группам = общий агрегат — хороший sanity check.
+
+
+
+
+
+
+## Task 07 — GROUP BY + HAVING: фильтрация групп
+
+### SQL
+
+```sql
+USE PracticeDB;
+
+-- 1) Отделы с > 2 сотрудников
+SELECT DepartmentId, COUNT(*) AS EmployeeCount
+FROM Employees
+GROUP BY DepartmentId
+HAVING COUNT(*) > 2
+ORDER BY EmployeeCount DESC;
+
+-- 2) Отделы со средней зарплатой > 55000
+SELECT DepartmentId, ROUND(AVG(Salary), 2) AS AvgSalary
+FROM Employees
+GROUP BY DepartmentId
+HAVING AVG(Salary) > 55000
+ORDER BY AvgSalary DESC;
+
+-- 3) Отделы с суммарной зарплатой > 150000
+SELECT DepartmentId, SUM(Salary) AS TotalSalary
+FROM Employees
+GROUP BY DepartmentId
+HAVING SUM(Salary) > 150000
+ORDER BY TotalSalary DESC;
+
+-- Бонус: все три условия сразу
+SELECT DepartmentId,
+       COUNT(*)              AS EmployeeCount,
+       ROUND(AVG(Salary), 2) AS AvgSalary,
+       SUM(Salary)           AS TotalSalary
+FROM Employees
+GROUP BY DepartmentId
+HAVING COUNT(*) > 2
+   AND AVG(Salary) > 55000
+   AND SUM(Salary) > 150000
+ORDER BY AvgSalary DESC;
+```
+
+### Результат
+
+1) COUNT(*) > 2 → отделы 1 (4 сотрудника) и 2 (3).
+
+2) AVG(Salary) > 55000 → отделы 4 (90000), 1 (60000), 2 (57000).
+
+3) SUM(Salary) > 150000 → отделы 1 (240000) и 2 (171000).
+
+Бонус (все три условия) → отделы 1 и 2 (оба проходят по COUNT, AVG и SUM).
+
+Все возвращённые отделы удовлетворяют условиям; отдел 3 и 4
+отфильтрованы.
+
+### Вывод
+
+- `HAVING` фильтрует **группы после** агрегации, `WHERE` — строки
+  **до** группировки. Агрегат (`COUNT`, `SUM`, `AVG`) нельзя
+  использовать в WHERE — только в HAVING или в SELECT.
+- AVG и SUM дают разную картину: отдел 4 лидирует по средней зарплате
+  (90000), но не проходит по SUM (>150000) и COUNT (>2), т.к. в нём
+  один сотрудник.
+- В HAVING можно комбинировать несколько агрегатных условий через AND/OR.
+- HAVING с не-агрегатными условиями технически возможен, но
+  неэффективен — такие условия лучше переносить в WHERE.
