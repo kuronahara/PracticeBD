@@ -1115,3 +1115,66 @@ FROM Employees WHERE EmployeeId = 1;            -- 75000.00 (после COMMIT)
 
 Критерий выполнен: после ROLLBACK значение исходное (65000),
 после COMMIT — изменённое (75000).
+
+
+
+
+
+
+## Task 19 — Представления (VIEW)
+
+### SQL
+
+
+```sql
+USE PracticeDB;
+GO
+
+-- Создание VIEW (4 таблицы: Employees → Departments, EmployeeProjects → Projects)
+CREATE VIEW vw_EmployeeDetails AS
+SELECT
+    e.EmployeeName,
+    d.DepartmentName,
+    p.ProjectName,
+    ep.Hours
+FROM Employees e
+INNER JOIN Departments      d  ON d.DepartmentId = e.DepartmentId
+INNER JOIN EmployeeProjects ep ON ep.EmployeeId  = e.EmployeeId
+INNER JOIN Projects         p  ON p.ProjectId    = ep.ProjectId;
+GO
+
+-- Использование как обычной таблицы
+SELECT * FROM vw_EmployeeDetails;
+
+-- VIEW существует в sys.views
+SELECT name FROM sys.views WHERE name = 'vw_EmployeeDetails';
+
+-- COUNT через VIEW
+SELECT COUNT(*) AS Cnt FROM vw_EmployeeDetails;   -- 14
+
+-- Удаление
+DROP VIEW vw_EmployeeDetails;
+
+-- Проверка: VIEW больше нет
+SELECT name FROM sys.views WHERE name = 'vw_EmployeeDetails';   -- 0
+
+-- Проверка: данные таблиц не изменились
+SELECT 'Employees' AS Tbl, COUNT(*) AS Cnt FROM Employees
+UNION ALL SELECT 'EmployeeProjects', COUNT(*) FROM EmployeeProjects
+UNION ALL SELECT 'Projects',         COUNT(*) FROM Projects
+UNION ALL SELECT 'Departments',      COUNT(*) FROM Departments;
+```
+
+### Результат
+
+- `CREATE VIEW vw_EmployeeDetails` — успешно, объект появился в sys.views.
+- `SELECT * FROM vw_EmployeeDetails` — вернул 14 строк (имя, отдел,
+  проект, часы) — как обычный запрос из Task 10.
+- `COUNT(*)` через VIEW = 14 (вычисляется поверх таблиц).
+- `DROP VIEW vw_EmployeeDetails` — выполнился без ошибок.
+- После DROP: sys.views пусто по этому имени; SELECT из VIEW — ошибка
+  Msg 208 (Invalid object name).
+- Данные таблиц не изменились: 10 / 14 / 5 / 4.
+
+Критерий выполнен: VIEW возвращал данные как обычный запрос, DROP
+выполнился без ошибок.
