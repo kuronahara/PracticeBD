@@ -284,3 +284,50 @@ ORDER BY DepartmentId ASC, Salary DESC;
   устойчивости добавляют уникальный ключ (EmployeeId).
 - `TOP (N)` — синтаксис с скобками; альтернатива — `OFFSET 0 ROWS
   FETCH NEXT N ROWS ONLY` (SQL Server 2012+).
+
+
+
+
+
+    ## Task 05 — Агрегация: COUNT, SUM, AVG, MIN, MAX
+
+### SQL
+
+```sql
+USE PracticeDB;
+
+-- Все 5 показателей одним запросом
+SELECT
+    COUNT(*)                                    AS TotalEmployees,
+    SUM(Salary)                                 AS TotalSalary,
+    ROUND(AVG(Salary), 2)                       AS AvgSalary,
+    MIN(Salary)                                 AS MinSalary,
+    MAX(Salary)                                 AS MaxSalary,
+    COUNT(CASE WHEN Salary > 50000 THEN 1 END)  AS Above50000
+FROM Employees;
+```
+
+### Результат
+
+| TotalEmployees | TotalSalary | AvgSalary | MinSalary | MaxSalary | Above50000 |
+|----------------|-------------|-----------|-----------|-----------|------------|
+| 10 | 589000.00 | 58900.00 | 43000.00 | 90000.00 | 7 |
+
+Ручная проверка:
+- COUNT = 10 (все сотрудники);
+- SUM = 65000+72000+55000+48000+61000+58000+52000+45000+43000+90000 = 589000;
+- AVG = 589000 / 10 = 58900.00;
+- MIN = 43000 (Соколова), MAX = 90000 (Лебедев);
+- > 50000: Иванова, Сидоров, Смирнова, Орлов, Кузнецова, Волкова, Лебедев = 7.
+
+Все 5 значений совпадают с ручной проверкой.
+
+### Вывод
+
+- `COUNT(*)` считает строки, `COUNT(column)` — не-NULL значения колонки.
+- `AVG` над DECIMAL(10,2) сохраняет дробную часть; `ROUND(..., 2)`
+  приводит к 2 знакам. Ловушка: над INT `AVG` вернул бы целое.
+- Количество с зарплатой > 50000 нельзя получить через `WHERE` в том же
+  SELECT с общими агрегатами — `WHERE` отфильтрует строки до агрегации.
+  Правильно — условный агрегат `COUNT(CASE WHEN Salary > 50000 THEN 1 END)`.
+- На пустой таблице COUNT вернёт 0, а SUM/AVG/MIN/MAX — NULL.
