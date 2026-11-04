@@ -1041,3 +1041,77 @@ COMMIT;
 - SELECT COUNT(*) до и после каждого DELETE — обязательная проверка
   (методичка требует).
 - После COMMIT база изменена; для Task 18+ перезапустить init.sql.
+
+
+
+
+
+
+
+
+
+## Task 18 — Транзакции: BEGIN TRAN / COMMIT / ROLLBACK
+
+### SQL
+
+
+```sql
+USE PracticeDB;
+
+-- =====================================================
+-- Часть A: ROLLBACK — изменение откатывается
+-- =====================================================
+SELECT EmployeeId, EmployeeName, Salary
+FROM Employees WHERE EmployeeId = 1;            -- 65000.00 (до)
+
+BEGIN TRANSACTION;
+
+UPDATE Employees SET Salary = Salary + 10000 WHERE EmployeeId = 1;
+
+SELECT EmployeeId, EmployeeName, Salary
+FROM Employees WHERE EmployeeId = 1;            -- 75000.00 (внутри)
+
+ROLLBACK TRANSACTION;
+
+SELECT EmployeeId, EmployeeName, Salary
+FROM Employees WHERE EmployeeId = 1;            -- 65000.00 (после ROLLBACK)
+
+-- =====================================================
+-- Часть B: COMMIT — изменение сохраняется
+-- =====================================================
+SELECT EmployeeId, EmployeeName, Salary
+FROM Employees WHERE EmployeeId = 1;            -- 65000.00 (до)
+
+BEGIN TRANSACTION;
+
+UPDATE Employees SET Salary = Salary + 10000 WHERE EmployeeId = 1;
+
+SELECT EmployeeId, EmployeeName, Salary
+FROM Employees WHERE EmployeeId = 1;            -- 75000.00 (внутри)
+
+COMMIT TRANSACTION;
+
+SELECT EmployeeId, EmployeeName, Salary
+FROM Employees WHERE EmployeeId = 1;            -- 75000.00 (после COMMIT)
+```
+
+### Результат
+
+**Часть A (ROLLBACK):**
+
+| Шаг | Salary |
+|-----|--------|
+| До транзакции | 65000.00 |
+| Внутри (после UPDATE) | 75000.00 |
+| После ROLLBACK | **65000.00** (исходное) |
+
+**Часть B (COMMIT):**
+
+| Шаг | Salary |
+|-----|--------|
+| До транзакции | 65000.00 |
+| Внутри (после UPDATE) | 75000.00 |
+| После COMMIT | **75000.00** (сохранилось) |
+
+Критерий выполнен: после ROLLBACK значение исходное (65000),
+после COMMIT — изменённое (75000).
