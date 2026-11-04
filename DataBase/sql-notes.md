@@ -697,3 +697,61 @@ WHERE Salary = (SELECT MAX(Salary) FROM Employees);
   с максимальной зарплатой, если их несколько.
 - Если бы AVG вернул NULL (пустая таблица), Salary > NULL дал бы
   UNKNOWN → 0 строк.
+
+
+
+
+
+   ## Task 13 — Скалярные подзапросы в SELECT
+
+### SQL
+
+```sql
+USE PracticeDB;
+
+SELECT
+    e.EmployeeName,
+    e.Salary,
+    e.DepartmentId,
+    (SELECT AVG(e2.Salary)
+     FROM Employees e2
+     WHERE e2.DepartmentId = e.DepartmentId) AS DeptAvgSalary,
+    ROUND(e.Salary - (SELECT AVG(e2.Salary)
+                      FROM Employees e2
+                      WHERE e2.DepartmentId = e.DepartmentId), 2) AS Deviation
+FROM Employees e
+ORDER BY e.DepartmentId, e.EmployeeId;
+```
+
+### Результат 
+
+10 строк; средние по отделам: 1 → 60000, 2 → 57000, 3 → 44000, 
+4 → 90000. Отклонения (Salary − Avg): 
+
+| EmployeeName | Salary | Dept | Avg | Deviation |
+|--------------|--------|------|-----|-----------|
+| Анна Иванова | 65000 | 1 | 60000 | 5000.00 |
+| Пётр Сидоров | 72000 | 1 | 60000 | 12000.00 |
+| Мария Кузнецова | 55000 | 1 | 60000 | -5000.00 |
+| Иван Петров | 48000 | 1 | 60000 | -12000.00 |
+| Ольга Смирнова | 61000 | 2 | 57000 | 4000.00 |
+| Дмитрий Орлов | 58000 | 2 | 57000 | 1000.00 |
+| Елена Волкова | 52000 | 2 | 57000 | -5000.00 |
+| Сергей Морозов | 45000 | 3 | 44000 | 1000.00 |
+| Наталья Соколова | 43000 | 3 | 44000 | -1000.00 |
+| Алексей Лебедев | 90000 | 4 | 90000 | 0.00 |
+
+Sanity check: сумма отклонений внутри каждого отдела = 0. 
+(проверено отдельным запросом — по каждому DeptId SumDev = 0.00) 
+
+### Вывод 
+
+- Подзапрос коррелированный: ссылается на e.DepartmentId внешней строки,
+  поэтому вычисляется для каждой строки. 
+- Скалярность: AVG с WHERE DepartmentId = … возвращает одно значение —
+  валидно в SELECT. 
+- Подзапрос в моём варианте дублируется (для Avg и Deviation); чище —
+  через CTE или оконную функцию AVG() OVER (PARTITION BY DepartmentId)
+  (уровень 3). 
+- Сумма отклонений внутри отдела = 0 — свойство среднего, хороший
+  sanity check. 
