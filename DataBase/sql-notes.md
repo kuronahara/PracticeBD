@@ -755,3 +755,53 @@ Sanity check: сумма отклонений внутри каждого отд
   (уровень 3). 
 - Сумма отклонений внутри отдела = 0 — свойство среднего, хороший
   sanity check. 
+
+
+
+
+
+   ## Task 14 — EXISTS / NOT EXISTS
+
+### SQL
+
+```sql
+USE PracticeDB;
+
+-- 1) Сотрудники с хотя бы одним проектом (EXISTS)
+SELECT e.EmployeeId, e.EmployeeName
+FROM Employees e
+WHERE EXISTS (
+    SELECT 1 FROM EmployeeProjects ep
+    WHERE ep.EmployeeId = e.EmployeeId
+)
+ORDER BY e.EmployeeId;
+
+-- 2) Сотрудники без проектов (NOT EXISTS)
+SELECT e.EmployeeId, e.EmployeeName
+FROM Employees e
+WHERE NOT EXISTS (
+    SELECT 1 FROM EmployeeProjects ep
+    WHERE ep.EmployeeId = e.EmployeeId
+)
+ORDER BY e.EmployeeId;
+
+-- Sanity check: 9 + 1 = 10
+SELECT
+  (SELECT COUNT(*) FROM Employees e
+   WHERE EXISTS (SELECT 1 FROM EmployeeProjects ep
+                 WHERE ep.EmployeeId = e.EmployeeId))      AS WithProjects,
+  (SELECT COUNT(*) FROM Employees e
+   WHERE NOT EXISTS (SELECT 1 FROM EmployeeProjects ep
+                     WHERE ep.EmployeeId = e.EmployeeId))  AS WithoutProjects,
+  (SELECT COUNT(*) FROM Employees)                          AS Total;
+```
+
+### Результат
+
+1) EXISTS → 9 строк: сотрудники 1, 2, 3, 4, 5, 6, 7, 8, 10.
+
+2) NOT EXISTS → 1 строка: Наталья Соколова (Id 9).
+
+Sanity check: WithProjects = 9, WithoutProjects = 1, Total = 10.
+9 + 1 = 10 — полное разбиение, совпадает с заданиями 8 (9 человек
+с проектами) и 9 (1 без проектов).
