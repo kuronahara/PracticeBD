@@ -538,3 +538,58 @@ ORDER BY e.EmployeeId;
 - Альтернативы: NOT EXISTS (часто эффективнее) и NOT IN (осторожно:
   при NULL в подзапросе вернёт пусто). Все три дают тот же результат.
 
+
+
+
+
+
+
+   ## Task 10 — Множественный JOIN: сотрудники, отделы, проекты
+
+### SQL
+
+```sql
+USE PracticeDB;
+
+SELECT
+    e.EmployeeName,
+    d.DepartmentName,
+    p.ProjectName,
+    ep.Hours
+FROM Employees e
+INNER JOIN Departments      d  ON d.DepartmentId = e.DepartmentId
+INNER JOIN EmployeeProjects ep ON ep.EmployeeId  = e.EmployeeId
+INNER JOIN Projects         p  ON p.ProjectId    = ep.ProjectId
+ORDER BY d.DepartmentName ASC, e.EmployeeName ASC, p.ProjectName ASC;
+
+-- Sanity check: столько же строк, сколько назначений
+SELECT COUNT(*) AS AssignedRows FROM EmployeeProjects;
+```
+
+### Результат
+
+14 строк — по одной на каждое назначение, у каждого видны все 4
+атрибута (сотрудник, отдел, проект, часы). COUNT совпадает с
+EmployeeProjects (14), значит INNER JOIN не отбросил ни одной строки.
+
+Порядок: отдел ↑ (Аналитика, Менеджмент, Разработка, Тестирование),
+внутри отдела — сотрудник ↑, внутри сотрудника — проект ↑.
+
+Фрагмент:
+| EmployeeName | DepartmentName | ProjectName | Hours |
+|--------------|----------------|-------------|-------|
+| Дмитрий Орлов | Аналитика | AI Assistant | 50 |
+| Дмитрий Орлов | Аналитика | Data Warehouse | 70 |
+| ... | ... | ... | ... |
+| Сергей Морозов | Тестирование | Legacy Refactor | 130 |
+
+### Вывод
+
+- Четыре таблицы соединяются цепочкой INNER JOIN по FK: Employees →
+  Departments, Employees → EmployeeProjects, EmployeeProjects → Projects.
+- Порядок JOIN в тексте запроса не влияет на результат — важен граф
+  условий ON; оптимизатор сам выбирает порядок соединения.
+- INNER JOIN отбрасывает строки без пары на каждом шаге. У нас 14 = 14,
+  потерь нет.
+- Алиасы обязательны: DepartmentId, EmployeeId, ProjectId встречаются
+  в двух таблицах каждая.
