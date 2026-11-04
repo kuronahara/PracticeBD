@@ -447,3 +447,54 @@ ORDER BY AvgSalary DESC;
 - В HAVING можно комбинировать несколько агрегатных условий через AND/OR.
 - HAVING с не-агрегатными условиями технически возможен, но
   неэффективен — такие условия лучше переносить в WHERE.
+
+
+
+
+    ## Task 08 — INNER JOIN: сотрудники и отделы
+
+### SQL
+
+```sql
+USE PracticeDB;
+
+SELECT
+    e.EmployeeName,
+    d.DepartmentName,
+    e.Salary
+FROM Employees e
+INNER JOIN Departments d ON d.DepartmentId = e.DepartmentId
+ORDER BY d.DepartmentName ASC, e.Salary DESC;
+
+-- Проверка: сотрудников без отдела нет
+SELECT COUNT(*) AS Orphans
+FROM Employees e
+LEFT JOIN Departments d ON d.DepartmentId = e.DepartmentId
+WHERE d.DepartmentId IS NULL;
+```
+
+### Результат
+
+10 строк, у каждого сотрудника есть DepartmentName:
+
+| EmployeeName | DepartmentName | Salary |
+|--------------|----------------|--------|
+| Ольга Смирнова | Аналитика | 61000 |
+| Дмитрий Орлов | Аналитика | 58000 |
+| Елена Волкова | Аналитика | 52000 |
+| Алексей Лебедев | Менеджмент | 90000 |
+| Пётр Сидоров | Разработка | 72000 |
+| Анна Иванова | Разработка | 65000 |
+| Мария Кузнецова | Разработка | 55000 |
+| Иван Петров | Разработка | 48000 |
+| Сергей Морозов | Тестирование | 45000 |
+| Наталья Соколова | Тестирование | 43000 |
+
+Проверка Orphans = 0: сотрудников без отдела нет, INNER JOIN
+не отбросил ни одной строки (в нашей БД INNER и LEFT дают 10 строк).
+
+### Вывод
+
+- INNER JOIN возвращает только совпавшие пары; строки без пары
+  отбрасываются с обеих сторон. У нас FK гарантирует, что сирот нет,
+  поэтому вернулись все 10 сотрудников.
